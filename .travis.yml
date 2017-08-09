@@ -1,0 +1,26 @@
+sudo: required
+dist: trusty
+
+language: node_js
+node_js:
+  - "6"
+
+cache:
+  apt: true
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-6
+    - g++-6
+
+services:
+ - mysql
+
+before_script:
+ - bash tests/install.sh
+
+script:
+ - bash tests/test.sh

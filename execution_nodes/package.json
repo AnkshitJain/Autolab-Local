@@ -1,0 +1,31 @@
+{
+  "name": "execution_nodes",
+  "version": "0.2.0",
+  "description": "execution node component of autolab evaluation sofware",
+  "main": "execute_node.js",
+  "scripts": {
+    "start": "node execute_node.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AutolabJS/AutolabJS.git"
+  },
+  "keywords": [
+    "autolab",
+    "lab",
+    "evaluation"
+  ],
+  "author": "Rajat Agarwal",
+  "contributors": [
+    "Tejas Sangol", "Gaurav Narula"
+  ],
+  "license": "GPL-2.0",
+  "bugs": {
+    "url": "https://github.com/AutolabJS/AutolabJS/issues"
+  },
+  "homepage": "https://github.com/AutolabJS/AutolabJS/wiki",
+  "dependencies": {
+    "body-parser": "1.8",
+    "express": "^4.13.4"
+  }
+}

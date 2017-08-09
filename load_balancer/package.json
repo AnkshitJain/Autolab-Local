@@ -1,0 +1,33 @@
+{
+  "name": "load_balancer",
+  "version": "0.2.0",
+  "description": "load balancer component of autolab evaluation sofware",
+  "main": "load_balancer.js",
+  "scripts": {
+    "start": "node load_balancer.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AutolabJS/AutolabJS.git"
+  },
+  "keywords": [
+    "autolab",
+    "lab",
+    "evaluation"
+  ],
+  "author": "Rajat Agarwal",
+  "contributors": [
+    "Tejas Sangol", "Gaurav Narula"
+  ],
+  "license": "GPL-2.0",
+  "bugs": {
+    "url": "https://github.com/AutolabJS/AutolabJS/issues"
+  },
+  "homepage": "https://github.com/AutolabJS/AutolabJS/wiki",
+  "dependencies": {
+    "body-parser": "1.8",
+    "express": "^4.13.4",
+    "httpolyglot": "^0.1.1",
+    "mysql": ""
+  }
+}
