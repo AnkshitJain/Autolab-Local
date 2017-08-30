@@ -126,11 +126,6 @@ then
 else
 	mkdir working_dir
 fi
-#
-# if [ -d student_solution ]
-# then
-# 	rm -rf student_solution
-# fi
 
 #redirect shell's core dump messages to log file
 cd results
