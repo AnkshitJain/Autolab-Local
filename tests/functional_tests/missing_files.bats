@@ -35,7 +35,6 @@ teardown() {
 @test "run no test info found" {
   sed -i '/bash execute.sh "$language"/ i rm -f ./test_info.txt' ../../execution_nodes/extract_run.sh
   sed -i '/bash execute.sh "$language"/ a cp ./results/log.txt /tmp/missing-files/no-test-info-found-log.txt' ../../execution_nodes/extract_run.sh
-  #sed -i '/bash execute.sh "$language"/ a cp ./results/log.txt ../../../../tmp/missing-files/no-test-info-found-log.txt' ../../execution_nodes/extract_run.sh
   node submit.js -i 2015A7PS006G -l lab1 --lang=java --host='localhost:9000' > \
       "$BATS_TMPDIR/missing-files/no-test-info-found.txt"
   cmp "$BATS_TMPDIR/missing-files/no-test-info-found.txt" data/missing-files/no-result-found.txt

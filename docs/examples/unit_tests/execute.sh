@@ -73,7 +73,6 @@ export testLog log
 testDir="test_cases"
 testSetup="setup"
 
-export testDir testSetup
 testInfo="test_info.txt"	#contains information on test case numbers, marks and time limt in tab separated file format
 
 
@@ -89,8 +88,6 @@ driver[cpp14]="Driver14.cpp"
 driver[java]="Driver.java"
 driver[python2]="Driver.py"
 driver[python3]="Driver3.py"
-
-export driver
 
 #reset all the three variables used to parse each line of "testInfo" file
 unset testName timeLimit
@@ -144,14 +141,15 @@ do
 	#obtain information from $line which is a line of test_info.txt
 	testName=$(echo "$line" | awk '{print $1}')
 	timeLimit=$(echo "$line" | awk '{print $2}')
-	export timeLimit testName
+	export timeLimit
+
 	#Test strategy
 	#copy necessary files
 	#shell script in next line copies student files, library files and needed files from author_solution/
 	# essentially determines the test strategy (unit/integration/load/library supported etc)
 	# the script file would also have redirection to copy the compile and execute scripts
-	source "${testDir}/$1/${testSetup}/${testName}.sh"
-  source "${testDir}/support_files.sh"
+	source "$testDir/$1/$testSetup/${testName}.sh"
+  source "$testDir/support_files.sh"
 	cd working_dir
 
 	#language specific compile and run of each test case
