@@ -5,7 +5,7 @@
       "port": "8082"
     }
   ],
-  "server_info": {
+  "serverInfo": {
     "hostname": "localhost",
     "port": "9000"
   },
@@ -19,7 +19,7 @@
     "hostname": "localhost",
     "port": "80"
   },
-  "host_port": {
+  "hostPort": {
     "port": "8081"
   }
 }

@@ -80,15 +80,6 @@ testInfo="test_info.txt"	#contains information on test case numbers, marks and t
 marks=()	#array for holding marks of all test cases
 comments=()	#array for holding comments of all test cases
 
-#associative array pointing to language-specific driver file
-declare -A driver
-#driver[c]="Driver.c"
-#driver[cpp]="Driver.cpp"
-#driver[cpp14]="Driver14.cpp"
-#driver[java]="Driver.java"
-#driver[python2]="Driver.py"
-#driver[python3]="Driver3.py"
-
 #reset all the three variables used to parse each line of "testInfo" file
 unset testName timeLimit
 unset testStatus
@@ -128,10 +119,15 @@ else
 fi
 
 #redirect shell's core dump messages to log file
-cd results
+cd results || exit
 exec 2> shellOut.txt
 cd ..
 
+if [ ! -f "$testInfo" ]
+then
+  echo -e "No test_info.txt found" > ./results/log.txt
+  exit
+fi
 #main test loop
 #read one test information each line of "test file" pointed to by testInfo and run a test
 while read -r line || [[ -n "$line" ]]
@@ -141,58 +137,62 @@ do
   #obtain information from $line which is a line of test_info.txt
   testName=$(echo "$line" | awk '{print $1}')
   timeLimit=$(echo "$line" | awk '{print $2}')
-  export timeLimit
+  export timeLimit testName
 
   #Test strategy
   #copy necessary files
   #shell script in next line copies student files, library files and needed files from author_solution/
   # essentially determines the test strategy (unit/integration/load/library supported etc)
   # the script file would also have redirection to copy the compile and execute scripts
+  # shellcheck source=/dev/null
   source "$testDir/$1/$testSetup/Test.sh"
+  # shellcheck source=/dev/null
   source "$testDir/support_files.sh"
-  cd working_dir
+  cd working_dir || exit
 
   #language specific compile and run of each test case
+  # shellcheck disable=SC1091
   source compile.sh
 
   #check for compilation errors
   if [ "$COMPILATION_STATUS" == "0" ]
   then
-  #if there are no errors, run the test
-  #echo "compilation success"
-  #code for successful test / failed test / timeout
-  source executeTest.sh
+    #if there are no errors, run the test
+    #echo "compilation success"
+    #code for successful test / failed test / timeout
+    # shellcheck disable=SC1091
+    source executeTest.sh
 
-  #interpret the timeout / successful test
-  #return status stored in timedOut variable has the following meaning
-  #	124 - timeout, 0 - in-time completion of execution
-  if [ "$timedOut" == "124" ]	#timeout
-  then
+    #interpret the timeout / successful test
+    #return status stored in timedOut variable has the following meaning
+    #	124 - timeout, 0 - in-time completion of execution
+    if [ "$timedOut" == "124" ]	#timeout
+    then
       testStatus='Timeout'
       testMarks=0
-  elif [ "$timedOut" == "0" ]      #not timed out
-  then
+    elif [ "$timedOut" == "0" ]      #not timed out
+    then
       #if test score is zero, then it's obviously wrong answer
       if [ "$testMarks" == "0" ]
       then
           testStatus='WrongAnswer'
-  elif [ "$testMarks" == "125" ]
-  then
-  testStatus='Exception'
-  testMarks=0
+      elif [ "$testMarks" == "125" ]
+      then
+        testStatus='Exception'
+        testMarks=0
       else
-          testStatus='Accepted'
+        testStatus='Accepted'
       fi
-  else 	#runtime error
-  testMarks=0
-  testStatus='Exception'
-  fi
-  #echo "timedOut=$timedOut,marks=$testMarks,status=$testStatus"
+    else 	#runtime error
+      testMarks=0
+      testStatus='Exception'
+    fi
+    #echo "timedOut=$timedOut,marks=$testMarks,status=$testStatus"
 
   else	#compilation errors case
-  #echo "compilation error"
-  testMarks=0						#no marks for compilation failure
-  testStatus='CompilationError'				#"compilation Error"
+    #echo "compilation error"
+    testMarks=0						#no marks for compilation failure
+    testStatus='CompilationError'				#"compilation Error"
   fi
 
   #update marks and comments arrays
@@ -210,7 +210,7 @@ done < $testInfo
 
 
 #copy score and comments from arrays to files
-cd results
+cd results || exit
 
 #remove any pre-existing files
 if [ -e scores.txt ]
@@ -235,12 +235,12 @@ cp shellOut.txt temp.txt
 logLength=$(wc -l log.txt | awk '{print $1}')
 if [ "$logLength" -gt 50 ]
 then
-    head -n 50 log.txt >> temp.txt
-    echo -e "\n=====LOG TRUNCATED====\n" >> temp.txt
-    mv temp.txt log.txt
+  head -n 50 log.txt >> temp.txt
+  echo -e "\n=====LOG TRUNCATED====\n" >> temp.txt
+  mv temp.txt log.txt
 else
-    cat log.txt >> temp.txt
-    mv temp.txt log.txt
+  cat log.txt >> temp.txt
+  mv temp.txt log.txt
 fi
 rm shellOut.txt
 
@@ -256,11 +256,6 @@ for each in "${comments[@]}"
 do
   echo "$each" >> comment.txt
 done
-
-cd ..
-
-
-
 
 #references
 #	http://stackoverflow.com/questions/10929453/read-a-file-line-by-line-assigning-the-value-to-a-variable
