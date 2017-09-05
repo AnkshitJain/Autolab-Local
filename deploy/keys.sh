@@ -90,7 +90,7 @@ createCert ../execution_nodes/ssl/execution_node_4 "en4.$ORGANIZATION"
 createCert ../execution_nodes/ssl/execution_node_5 "en5.$ORGANIZATION"
 
 #Copying the certificates from autolab components to deploy/keys
-cd ../main_server/ssl || exit
+cd ../main_server/ssl
 mv main_server_cert.pem cert.pem
 mv main_server_key.pem key.pem
 cp ./* ../../deploy/keys/main_server
@@ -98,12 +98,12 @@ cp ./* ../../deploy/keys/main_server
 cp key.pem ../../deploy/keys/gitlab/ssl/localhost.key
 cp cert.pem ../../deploy/keys/gitlab/ssl/localhost.crt
 
-cd ../../load_balancer/ssl || exit
+cd ../../load_balancer/ssl
 mv load_balancer_cert.pem cert.pem
 mv load_balancer_key.pem key.pem
 cp ./* ../../deploy/keys/load_balancer
 
-cd ../../execution_nodes/ssl || exit
+cd ../../execution_nodes/ssl
 mv execution_node_1_cert.pem cert.pem
 mv execution_node_1_key.pem key.pem
 cp ./* ../../deploy/keys/execution_nodes
@@ -117,15 +117,15 @@ function sshKeyGen {
   ssh-keygen -t rsa -b 4096 -C "$comment" -f "$path/id_rsa" -N '' -q
 }
 # for load balancer
-cd ../../deploy/keys/gitlab || exit
+cd ../../deploy/keys/gitlab
 sshKeyGen "load balancer key for lb@autlabjs" load_balancer
 
 # for each execution node
-cd execution_nodes || exit
+cd execution_nodes
 sshKeyGen "execution_node_1 key for en1@autlabjs" execution_node_1
 sshKeyGen "execution_node_2 key for en2@autlabjs" execution_node_2
 sshKeyGen "execution_node_3 key for en3@autlabjs" execution_node_3
 sshKeyGen "execution_node_4 key for en4@autlabjs" execution_node_4
 sshKeyGen "execution_node_5 key for en5@autlabjs" execution_node_5
 
-cd ../.. || exit #go back to deploy/ directory at the end of the script
+cd ../..  #go back to deploy/ directory at the end of the script

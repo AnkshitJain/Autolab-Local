@@ -14,14 +14,6 @@ sudo pip install --upgrade pip
 sudo pip install cryptography
 sudo pip install setuptools
 sudo pip install ansible
-sudo apt-get install npm
-cd ../main_server
-npm install
-cd ../load_balancer
-npm install
-cd ../execution_nodes
-npm install
-cd ../deploy
 sudo service docker restart
 
 echo "Creating SSL certificates"

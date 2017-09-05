@@ -1,4 +1,3 @@
-#!/bin/bash
 #copy all the files under test from "student_solution/" and support files from "author_solution/"
 #copy all source files first
 

@@ -148,7 +148,6 @@
         detach: yes
         restart_policy: always
         volumes:
-          - "../load_balancer:/load_balancer"
           - "{{ submissions_dir }}:/load_balancer/submissions"
           - "/etc/localtime:/etc/localtime:ro"
           - "./configs/load_balancer:/etc/load_balancer"
@@ -172,7 +171,6 @@
         detach: yes
         restart_policy: always
         volumes:
-          - "../main_server:/main_server"
           - "/etc/localtime:/etc/localtime:ro"
           - "./configs/main_server:/etc/main_server"
 
@@ -251,7 +249,6 @@
         detach: yes
         restart_policy: always
         volumes:
-          - "../execution_nodes:/execution_nodes"
           - "/etc/localtime:/etc/localtime:ro"
           - "{{ ansible_env.HOME}}/.autolab/configs/execution_nodes:/etc/execution_node"
           - "{{ ansible_env.HOME}}/.autolab/keys/execution-node-{{ inventory_hostname }}-{{ port }}:/root/.ssh/"

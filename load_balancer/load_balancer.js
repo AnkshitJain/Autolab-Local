@@ -1,296 +1,294 @@
-'use strict';
-const fs = require('fs');
-const express = require('express');
-const app = express();
-const httpsConfig = {
-  key: fs.readFileSync('./ssl/key.pem'),
+var fs = require('fs');
+var express = require('express');
+var app = express();
+var https_config={
+  key : fs.readFileSync('./ssl/key.pem'),
   cert: fs.readFileSync('./ssl/cert.pem'),
-  rejectUnauthorized: false
+  rejectUnauthorized:false,
 };
-const https = require('https');
-const httpolyglot = require('httpolyglot');
-const server = httpolyglot.createServer(httpsConfig, app);
-const bodyParser = require('body-parser');
-const exec = require('child_process').exec;
-const mysql = require('mysql');
-const nodesData = require('/etc/load_balancer/nodes_data_conf.json');
+var https =require('https');
+var httpolyglot = require('httpolyglot');
+var server = httpolyglot.createServer(https_config,app);
+var http = require('http');
+var bodyParser = require('body-parser');
+var fs = require('fs');
+var sys = require('sys');
+var exec = require('child_process').exec;
+var nodes_data;
+if(process.env.mode ==  'TESTING')  nodes_data = require('/etc/load_balancer/nodes_data_conf.json');
+else nodes_data = require('/etc/load_balancer/nodes_data_conf.json');
 
-var nodeQueue = [];
-var jobQueue = [];
-const serverHostname = nodesData.serverInfo.hostname;
-const serverPort = nodesData.serverInfo.port;
-const gitlabHostname = nodesData.gitlab.hostname;
-var connection;
-var i;
+var mysql = require('mysql');
 
-server.listen(nodesData.hostPort.port);
-console.log('Listening at ' + nodesData.hostPort.port);
 
+app.use(express.static(__dirname + '/public'));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-app.get('/userCheck', function (req, res) {
+app.get('/userCheck', function (req,res) {
   console.log('userCheck requested');
   res.send(true);
 });
 
-app.get('/connectionCheck', function (req, res) {
+app.get('/connectionCheck', function (req,res) {
   console.log('connectionCheck requested');
-  var result = 'Load Balancer Working\n',
-    numOfNodes = nodesData.Nodes.length;
-
-  function dispResult() {
-    res.send(result);
-  }
-
-  function checkNodeConn(node) {
+  var result = 'Load Balancer Working\n';
+  var numOfNodes = nodes_data.Nodes.length;
+  function checkNodeConn(node){
     var options = {
       host: node.hostname,
       port: node.port,
       path: '/connectionCheck',
-      key: fs.readFileSync('./ssl/key.pem'),
+      key : fs.readFileSync('./ssl/key.pem'),
       cert: fs.readFileSync('./ssl/cert.pem'),
-      rejectUnauthorized: false
-    },
+      rejectUnauthorized:false,
+    };
     //send a get request and capture the response
-      reqCheckNodeConn = https.request(options, function (res) {
+    var req = https.request(options, function(res){
       // Buffer the body entirely for processing as a whole.
-        var bodyChunks = [];
-        res.on('data', function (chunk) {
-          bodyChunks.push(chunk);
-        }).on('end', function () {
-          var body = Buffer.concat(bodyChunks);
-          result = result.concat('<br/>Execution Node at ' + node.hostname + ':' + node.port + ' working: ' + body);
-          console.log('nodeing');
-          //return if all requets processed
-          numOfNodes = numOfNodes - 1;
-          if (numOfNodes === 0) {
-            console.log('DispRes');
-            dispResult();
-          }
-        });
+      var bodyChunks = [];
+      res.on('data', function(chunk){
+        bodyChunks.push(chunk);
+      }).on('end', function(){
+        var body = Buffer.concat(bodyChunks);
+        result = result.concat('<br/>Execution Node at '+node.hostname+':'+node.port+' working: ' + body);
+        console.log("nodeing");
+        //return if all requets processed
+        if(--numOfNodes === 0){
+          console.log("DispRes");
+          dispResult();
+        }
       });
-    reqCheckNodeConn.on('error', function (e) {
-      result = result.concat('<br/>Execution Node at  ' + node.hostname + ':' + node.port + ' Error: ' + e.message);
+    });
+    req.on('error', function(e) {
+      result = result.concat('<br/>Execution Node at  '+node.hostname+':'+node.port+' Error: ' + e.message);
       //return if all requets processed
-      numOfNodes = numOfNodes - 1;
-      if (numOfNodes === 0) {
-        console.log('DispRes');
+      if(--numOfNodes === 0){
+      console.log("DispRes");
         dispResult();
       }
     });
-    reqCheckNodeConn.end();
+    req.end();
   } //checkNodeConnection ends
 
+  function dispResult(){
+    res.send(result);
+  }
   //Check connection of all nodes
-  for (i = 0; i < nodesData.Nodes.length; i = i + 1) {
+  for(var i=0;i<nodes_data.Nodes.length;i++)
+  {
     console.log(numOfNodes);
-    checkNodeConn(nodesData.Nodes[i]);
+    checkNodeConn(nodes_data.Nodes[i]);
   }
 });
 
-app.post('/submit', function (req, res) {
-  console.log('submit post request received');
-  console.log(req.body);
+app.post('/submit', function(req, res){
+  console.log('submit post request recieved');
+      console.log(req.body)
+
+
   res.send(true);
 
-  if (nodeQueue.length !== 0) {
-    console.log(nodeQueue.length + ' ' + jobQueue.length);
-    var assignedNode = nodeQueue.pop(),
-      assignedHostname = assignedNode.hostname,
-      assignedPort = assignedNode.port,
-      body = JSON.stringify(req.body),
-      httpsJobOptions = {
-        hostname: assignedHostname,
-        port: assignedPort,
-        path: '/requestRun',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body)
-        },
-        key: fs.readFileSync('./ssl/key.pem'),
-        cert: fs.readFileSync('./ssl/cert.pem'),
-        rejectUnauthorized: false
-      },
-
-      request = https.request(httpsJobOptions, function (response) {
-        response.on('data', function (chunk) {
-          console.log(chunk);
-        });
-      });
-
-    request.on('error', function (error) {
-      console.log(error);
-    });
-
-    request.end(body);
-  } else {
-    jobQueue.push(req.body);
-  }
-});
-
-app.post('/sendScores', function (req, res) {
-  console.log('sendScores post request received');
-  var submissionJson = req.body.submission_details,
-    nodeJson = req.body.node_details,
-    body,
-    httpsJobOptions,
-    request,
-    assignedNode,
-    assignedHostname,
-    assignedPort,
-    array,
-    q,
-    q1,
-    totalScore,
-    codeDownloadFlag,
-    tableName,
-    execCommand;
-  nodeQueue.push(nodeJson);
-  res.send(true);
-  if (jobQueue.length !== 0) {
-    assignedNode = nodeQueue.pop();
-    assignedHostname = assignedNode.hostname;
-    assignedPort = assignedNode.port;
-    body = JSON.stringify(jobQueue.pop());
-    httpsJobOptions = {
-      hostname: assignedHostname,
-      port: assignedPort,
-      path: '/requestRun',
-      method: 'POST',
+  if(node_queue.length!==0) {
+     console.log(node_queue.length + ' ' + job_queue.length)
+    var assigned_node = node_queue.pop();
+    var assigned_hostname = assigned_node.hostname;
+    var assigned_port = assigned_node.port;
+    var body=JSON.stringify(req.body);
+    var https_job_options={
+      hostname: assigned_hostname,
+      port: assigned_port,
+      path: "/requestRun",
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body)
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body)
       },
-      key: fs.readFileSync('./ssl/key.pem'),
+      key : fs.readFileSync('./ssl/key.pem'),
       cert: fs.readFileSync('./ssl/cert.pem'),
-      rejectUnauthorized: false
+      rejectUnauthorized:false,
     };
 
-    request = https.request(httpsJobOptions, function (response) {
-      response.on('data', function (chunk) {
-        console.log(chunk);
-      });
+    var request = https.request(https_job_options,function(response)
+    {
+        response.on('data',function(chunk)
+        {
+
+        });
     });
 
-    request.on('error', function (error) {
+    request.on('error',function(error)
+    {
+      console.log(error);
+    });
+
+    request.end(body);
+  }
+  else {
+    job_queue.push(req.body);
+  }
+});
+
+app.post('/sendScores', function(req, res){
+  console.log('sendScores post request recieved');
+  var submission_json = req.body.submission_details;
+
+  var node_json = req.body.node_details;
+
+  node_queue.push(node_json);
+  res.send(true);
+  if(job_queue.length!==0)
+  {
+
+    var assigned_node = node_queue.pop();
+    var assigned_hostname = assigned_node.hostname;
+    var assigned_port = assigned_node.port;
+    var body=JSON.stringify(job_queue.pop());
+    var https_job_options={
+      hostname: assigned_hostname,
+      port: assigned_port,
+      path: "/requestRun",
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body)
+      },
+      key : fs.readFileSync('./ssl/key.pem'),
+      cert: fs.readFileSync('./ssl/cert.pem'),
+      rejectUnauthorized:false,
+    };
+
+    var request = https.request(https_job_options,function(response)
+    {
+        response.on('data',function(chunk)
+        {
+
+        });
+    });
+
+    request.on('error',function(error)
+    {
       console.log(error);
     });
 
     request.end(body);
 
   }
+  var body=JSON.stringify(submission_json);
 
-  body = JSON.stringify(submissionJson);
-  httpsJobOptions = {
-    hostname: serverHostname,
-    port: serverPort,
-    path: '/results',
-    method: 'POST',
+  var https_job_options={
+    hostname: server_hostname,
+    port: server_port,
+    path: "/results",
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(body)
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(body)
     },
-    key: fs.readFileSync('./ssl/key.pem'),
+    key : fs.readFileSync('./ssl/key.pem'),
     cert: fs.readFileSync('./ssl/cert.pem'),
-    rejectUnauthorized: false
+    rejectUnauthorized:false,
   };
 
-  request = https.request(httpsJobOptions, function (response) {
-    response.on('data', function (chunk) {
-      console.log(chunk);
-    });
+  var request = https.request(https_job_options,function(response)
+  {
+      response.on('data',function(chunk)
+      {
+
+      });
   });
 
-  request.on('error', function (error) {
+  request.on('error',function(error)
+  {
     console.log(error);
   });
+
   request.end(body);
 
-  array = submissionJson.marks;
-  if (submissionJson.status ===  1 || submissionJson.status === 2) {
-    totalScore = 0;
-    for (i = 0; i < array.length; i = i + 1) {
-      totalScore = totalScore + parseInt(array[i], 10);
+  array = submission_json.marks;
+  if(submission_json.status ==  1 || submission_json.status == 2)
+  {
+    total_score = 0;
+    for(var i in array)
+    {
+      total_score=total_score+parseInt(array[i]);
     }
-    totalScore = totalScore - parseInt(submissionJson.penalty, 10);
-    if (totalScore < 0) {
-      totalScore = 0;
+    total_score = total_score - parseInt(submission_json.penalty);
+    if(total_score < 0)
+    {
+      total_score = 0;
     }
-
-    codeDownloadFlag = 0;
-    tableName = 'l' + submissionJson.Lab_No;
-    q = 'SELECT * FROM ' + tableName + ' WHERE id_no = \'' + submissionJson.id_no + '\'';
-    connection.query(q, function (err, rows, fields) {
-      if (err) {
-        console.log(err);
-      }
-      if (rows === undefined || rows.length === 0) {
-        q1 = 'INSERT INTO ' + tableName + ' VALUES (\'' + submissionJson.id_no + '\', ' + totalScore + ',\'' + submissionJson.time + '\')';
-        connection.query(q1, function (err, rows, fields) {
-          console.log(err);
+    code_download_flag=0;
+    table_name='l'+submission_json.Lab_No;
+    q="SELECT * FROM "+table_name+" WHERE id_no = \'"+submission_json.id_no+"\'";
+    connection.query(q ,function(err, rows, fields) {
+      if(process.env.mode == 'TESTING') return;
+      if(rows.length===0)
+      {
+        var q1='INSERT INTO '+table_name+' VALUES (\''+submission_json.id_no+'\', '+ total_score+',\''+submission_json.time+'\')';
+        connection.query(q1, function(err, rows, fields) {
         });
-        codeDownloadFlag = 1;
-      } else {
-        if (rows[0].score < totalScore) {
-          q1 = 'UPDATE ' + tableName + ' SET score=' + totalScore + ', time=\'' + submissionJson.time + '\' WHERE id_no=\'' + submissionJson.id_no + '\'';
-          connection.query(q1, function (err, rows, fields) {
-            console.log(err);
+        code_download_flag=1;
+      }
+      else {
+        if(rows[0].score < total_score)
+        {
+          var q1='UPDATE '+table_name+' SET score='+total_score+', time=\''+submission_json.time+'\' WHERE id_no=\''+submission_json.id_no+'\'' ;
+          connection.query(q1, function(err, rows, fields) {
           });
-          codeDownloadFlag = 1;
+          code_download_flag=1;
         }
       }
-      if (codeDownloadFlag === 1) {
-        execCommand = 'bash savecode.sh ';
-        execCommand = execCommand.concat(submissionJson.id_no + ' ' + submissionJson.Lab_No + ' ' + gitlabHostname + ' ' + submissionJson.commit);
-        exec(execCommand, function (error, stdout, stderr) {
-          console.log(error);
-          console.log(stdout);
-          console.log(stderr);
+      if(code_download_flag==1)
+      {
+        var exec_command = 'bash savecode.sh ';
+        exec_command = exec_command.concat(submission_json.id_no+" "+submission_json.Lab_No+" "+gitlab_hostname+" "+submission_json.commit);
+        exec(exec_command,function (error, stdout, stderr) {
         });
       }
     });
   }
 });
 
-app.post('/addNode', function (req, res) {
-  console.log('addNode post request received');
+app.post('/addNode', function(req, res){
+  console.log('addNode post request recieved');
   res.send(true);
   // Check if the Execution node is already accounted for in the queue,return if it is.
-  for (i = 0; i < nodeQueue.length; i = i + 1) {
-    if (nodeQueue[i].hostname === req.body.hostname && nodeQueue[i].port === req.body.port) {
-      return;
-    }
-  }
-
-  console.log(req.body);
-  nodeQueue.push(req.body);
-  console.log('Added ' + req.body.hostname + ':' + req.body.port + ' to queue');
-  if (jobQueue.length !== 0) {
-    var assignedNode = nodeQueue.pop(),
-      assignedHostname = assignedNode.hostname,
-      assignedPort = assignedNode.port,
-      body = JSON.stringify(jobQueue.pop()),
-      httpsJobOptions = {
-        hostname: assignedHostname,
-        port: assignedPort,
-        path: '/requestRun',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body)
-        },
-        key: fs.readFileSync('./ssl/key.pem'),
-        cert: fs.readFileSync('./ssl/cert.pem'),
-        rejectUnauthorized: false
+  for(var node in node_queue) if(node_queue[node].hostname === req.body.hostname && node_queue[node].port === req.body.port) return;
+  console.log(req.body)
+  node_queue.push(req.body);
+  console.log("Added "+req.body.hostname+":"+req.body.port+" to queue");
+  
+  if(job_queue.length!==0)
+  {
+    var assigned_node = node_queue.pop();
+    var assigned_hostname = assigned_node.hostname;
+    var assigned_port = assigned_node.port;
+    var body=JSON.stringify(job_queue.pop());
+    var https_job_options={
+      hostname: assigned_hostname,
+      port: assigned_port,
+      path: "/requestRun",
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body)
       },
-      request = https.request(httpsJobOptions, function (response) {
-        response.on('data', function (chunk) {
-          console.log(chunk);
-        });
-      });
+      key : fs.readFileSync('./ssl/key.pem'),
+      cert: fs.readFileSync('./ssl/cert.pem'),
+      rejectUnauthorized:false,
+    };
 
-    request.on('error', function (error) {
+    var request = https.request(https_job_options,function(response)
+    {
+        response.on('data',function(chunk)
+        {
+
+        });
+    });
+
+    request.on('error',function(error)
+    {
       console.log(error);
     });
 
@@ -299,59 +297,90 @@ app.post('/addNode', function (req, res) {
   }
 });
 
+
+server_hostname=nodes_data.server_info.hostname;
+server_port=nodes_data.server_info.port;
+
+gitlab_hostname=nodes_data.gitlab.hostname;
+gitlab_port=nodes_data.gitlab.port;
+
+var connection;
+
+
+
 try {
-  connection = mysql.createConnection(nodesData.database);
+  var connection = mysql.createConnection(
+    nodes_data.database
+  );
   connection.connect();
+
 } catch (e) {
-  console.log(e);
+    console.log(e);
+
+} finally {
+
 }
+var node_queue=[];
+for(var i=0;i<nodes_data.Nodes.length;i++)
+{
+  checkNodeConn(nodes_data.Nodes[i]);
+  function checkNodeConn(node) {
 
-function checkNodeConn(node) {
-  var httpsCheckConn = {
-    hostname: node.hostname,
-    port: node.port,
-    path: '/connectionCheck',
-    key: fs.readFileSync('./ssl/key.pem'),
-    cert: fs.readFileSync('./ssl/cert.pem'),
-    rejectUnauthorized: false
-  },
-    checkConnRequest = https.request(httpsCheckConn, function (res) {
-      var bodyChunks = [];
-      res.on('data', function (chunk) {
-        bodyChunks.push(chunk);
-      }).on('end', function () {
-        var body = Buffer.concat(bodyChunks);
-        if (body.toString() === 'true') {
-          console.log('Added ' + node.hostname + ':' + node.port + ' to queue');
-          nodeQueue.push(node);
-        }
-      });
+    var https_checkConn ={
+      hostname : node.hostname,
+      port : node.port,
+      path : '/connectionCheck',
+      key : fs.readFileSync('./ssl/key.pem'),
+      cert: fs.readFileSync('./ssl/cert.pem'),
+      rejectUnauthorized:false,
+    };
+
+  var checkConnRequest = https.request(https_checkConn,function(res)
+  {
+    var bodyChunks =[];
+    res.on('data',function(chunk)
+    {
+      bodyChunks.push(chunk);
+    }).on('end',function()
+    {
+      var body = Buffer.concat(bodyChunks);
+      if(body.toString()=='true')
+      {
+        console.log("Added "+node.hostname+":"+node.port+" to queue");
+        node_queue.push(node);
+      }
     });
-
-  checkConnRequest.on('error', function (err) {
-    console.log('Error connecting to ' + node.hostname + ':' + node.port + ' ' + err);
   });
 
-  checkConnRequest.end();
+  checkConnRequest.on('error',function(err)
+{
+  console.log("Error connecting to "+node.hostname+":"+node.port);
+
+});
+checkConnRequest.end();
+
+  }
 }
 
-for (i = 0; i < nodesData.Nodes.length; i = i + 1) {
-  checkNodeConn(nodesData.Nodes[i]);
+var job_queue = [];
+if(process.env.mode !== "TESTING")
+{
+  server.listen(nodes_data.host_port.port);
+  console.log("Listening at "+nodes_data.host_port.port);
 }
+
+
 
 setInterval(function () {
-  connection.query('SELECT 1', function (err, rows, fields) {
-    if (err) {
-      console.log('Error connecting to the database');
-    } else {
-      console.log('keep alive query');
-    }
+  connection.query('SELECT 1' ,function(err, rows, fields) {
+    console.log("keep alive query");
   });
 }, 10000);
 
-module.exports = {
-  app: app,
-  server: server,
-  nodeQueue: nodeQueue,
-  jobQueue: jobQueue
-};
+
+module.exports ={
+  app:app,
+  server:server,
+  node_queue:node_queue,
+  job_queue:job_queue
+}

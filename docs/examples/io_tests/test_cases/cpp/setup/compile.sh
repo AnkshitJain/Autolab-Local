@@ -1,4 +1,4 @@
-#!/bin/bash
+
 ######################
 # Author: TSRK Prasad
 # Date: 08-Dec-2016
