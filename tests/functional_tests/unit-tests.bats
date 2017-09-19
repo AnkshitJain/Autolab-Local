@@ -14,8 +14,6 @@ teardown() {
 @test "run Java unit test" {
   node submit.js -i 2015A7PS006G -l lab1 --lang=java --host='localhost:9000' > \
       "$BATS_TMPDIR/unit-tests-example/java.txt"
-  cat $BATS_TMPDIR/unit-tests-example/java.txt
-  cat data/unit-tests-example/test-result.txt
   cmp "$BATS_TMPDIR/unit-tests-example/java.txt" data/unit-tests-example/test-result.txt
   result=$?
   [ "$result" -eq 0 ]

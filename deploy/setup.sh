@@ -16,54 +16,63 @@ sudo pip install setuptools
 sudo pip install ansible
 sudo service docker restart
 
-sudo mkdir -p /opt/autolabjs/
+INSTALL_DIR="/opt/autolabjs"
+sudo mkdir -p "$INSTALL_DIR"
 USER=$(whoami)
-sudo chown -R $USER /opt/autolabjs
+sudo chown -R $USER $INSTALL_DIR
 sudo usermod -aG docker $USER
 
+mkdir -p $INSTALL_DIR/gitlab
+mkdir -p $INSTALL_DIR/gitlab/config
+mkdir -p $INSTALL_DIR/gitlab/logs
+mkdir -p $INSTALL_DIR/gitlab/data
+mkdir -p $INSTALL_DIR/mysql
 
-mkdir -p /opt/autolabjs/gitlab
-mkdir -p /opt/autolabjs/gitlab/config
-mkdir -p /opt/autolabjs/gitlab/logs
-mkdir -p /opt/autolabjs/gitlab/data
-mkdir -p /opt/autolabjs/mysql
+mkdir -p $INSTALL_DIR/main_server
+cp -rf ../main_server/* $INSTALL_DIR/main_server/
+npm install --prefix $INSTALL_DIR/main_server
+#install the dependencies for userlogic.js
+npm install --prefix $INSTALL_DIR/main_server/public/js
+#copy only the necessary files to the required directories
+MAIN_SERVER_PUBLIC="/opt/autolabjs/main_server/public"
+cp $MAIN_SERVER_PUBLIC/js/node_modules/jquery/dist/jquery.min.js $MAIN_SERVER_PUBLIC/js/
+cp $MAIN_SERVER_PUBLIC/js/node_modules/file-saver/FileSaver.min.js $MAIN_SERVER_PUBLIC/js/
+cp $MAIN_SERVER_PUBLIC/js/node_modules/materialize-css/dist/js/materialize.min.js $MAIN_SERVER_PUBLIC/js/
+cp $MAIN_SERVER_PUBLIC/js/node_modules/materialize-css/dist/css/materialize.min.css $MAIN_SERVER_PUBLIC/css/
+#remove the node_modules directory
+rm -rf $MAIN_SERVER_PUBLIC/js/node_modules
 
-mkdir -p /opt/autolabjs/main_server
-cp -rf ../main_server/* /opt/autolabjs/main_server/
-npm install --prefix /opt/autolabjs/main_server
-npm install --prefix /opt/autolabjs/main_server/public/js
-
-mkdir -p /opt/autolabjs/load_balancer
-cp -rf ../load_balancer/* /opt/autolabjs/load_balancer/
-npm install --prefix /opt/autolabjs/load_balancer
+mkdir -p $INSTALL_DIR/load_balancer
+cp -rf ../load_balancer/* $INSTALL_DIR/load_balancer/
+npm install --prefix $INSTALL_DIR/load_balancer
 
 #This is for a five node setup. Run the below three commands for the number of nodes
 #required, by adding or removing the appropriate commands and replace the path by
 #/opt/autolabjs/execution_nodes/execution_node_{node_number}
-mkdir -p /opt/autolabjs/execution_nodes/execution_node_1
-cp -rf ../execution_nodes/* /opt/autolabjs/execution_nodes/execution_node_1
-npm install --prefix /opt/autolabjs/execution_nodes/execution_node_1
+mkdir -p $INSTALL_DIR/execution_nodes/execution_node_1
+cp -rf ../execution_nodes/* $INSTALL_DIR/execution_nodes/execution_node_1
+npm install --prefix $INSTALL_DIR/execution_nodes/execution_node_1
 
-mkdir -p /opt/autolabjs/execution_nodes/execution_node_2
-cp -rf ../execution_nodes/* /opt/autolabjs/execution_nodes/execution_node_2
-npm install --prefix /opt/autolabjs/execution_nodes/execution_node_2
+mkdir -p $INSTALL_DIR/execution_nodes/execution_node_2
+cp -rf ../execution_nodes/* $INSTALL_DIR/execution_nodes/execution_node_2
+npm install --prefix $INSTALL_DIR/execution_nodes/execution_node_2
 
-mkdir -p /opt/autolabjs/execution_nodes/execution_node_3
-cp -rf ../execution_nodes/* /opt/autolabjs/execution_nodes/execution_node_3
-npm install --prefix /opt/autolabjs/execution_nodes/execution_node_3
+mkdir -p $INSTALL_DIR/execution_nodes/execution_node_3
+cp -rf ../execution_nodes/* $INSTALL_DIR/execution_nodes/execution_node_3
+npm install --prefix $INSTALL_DIR/execution_nodes/execution_node_3
 
-mkdir -p /opt/autolabjs/execution_nodes/execution_node_4
-cp -rf ../execution_nodes/* /opt/autolabjs/execution_nodes/execution_node_4
-npm install --prefix /opt/autolabjs/execution_nodes/execution_node_4
+mkdir -p $INSTALL_DIR/execution_nodes/execution_node_4
+cp -rf ../execution_nodes/* $INSTALL_DIR/execution_nodes/execution_node_4
+npm install --prefix $INSTALL_DIR/execution_nodes/execution_node_4
 
-mkdir -p /opt/autolabjs/execution_nodes/execution_node_5
-cp -rf ../execution_nodes/* /opt/autolabjs/execution_nodes/execution_node_5
-npm install --prefix /opt/autolabjs/execution_nodes/execution_node_5
+mkdir -p $INSTALL_DIR/execution_nodes/execution_node_5
+cp -rf ../execution_nodes/* $INSTALL_DIR/execution_nodes/execution_node_5
+npm install --prefix $INSTALL_DIR/execution_nodes/execution_node_5
 
-cp -rf ../deploy /opt/autolabjs/
+cp -rf ../deploy $INSTALL_DIR/
 
 echo "Creating SSL certificates"
-cd /opt/autolabjs/deploy || exit
+cd $INSTALL_DIR/deploy || exit
 bash keys.sh
 
 cat << EOF
