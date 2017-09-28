@@ -62,7 +62,8 @@
           - "/opt/autolabjs/gitlab/config:/etc/gitlab"
           - "/opt/autolabjs/gitlab/logs:/var/log/gitlab"
           - "/opt/autolabjs/gitlab/data:/var/opt/gitlab"
-          - "./keys/gitlab/ssl:/etc/gitlab/ssl"
+          - "./keys/gitlab/ssl/localhost.key:/etc/gitlab/ssl/{{ inventory_hostname }}.key"
+          - "./keys/gitlab/ssl/localhost.crt:/etc/gitlab/ssl/{{ inventory_hostname }}.crt"
 
     - name: Copy wait-for-it to container
       shell: docker cp wait-for-it.sh gitlab:/wait-for-it.sh
@@ -101,7 +102,7 @@
       register: ssh_key
 
     - name: Get Private Token
-      uri:
+      uri:vi
         url: https://{{ gitlab_hostname }}/api/v3/session
         status_code: 201
         method: POST
