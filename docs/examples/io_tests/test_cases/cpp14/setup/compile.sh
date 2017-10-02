@@ -6,6 +6,13 @@
 # script fragment used for run-time tests
 # used by ../../execute.sh; not invoked directly
 #
+# All variables that are exported are in upper case convention. They are:
+#   COMPILATION_STATUS : compilation status of the submitted solution files
+#   TESTLOG : name of log file that stores results of a test
+#   LOG : log file that stores results from all tests
+#   NO_OF_ERRORS : errors generated in the compilation for a test
+# The environment variables are in upper case convention. They are:
+#   PIPESTATUS : an array variable which contains the exit status of each command in piped commands
 ######################
 
 #clear compileErrors flag

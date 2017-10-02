@@ -24,31 +24,37 @@
 #
 #	Variable definitions
 #	--------------------
-#	TESTLOG		temporary test log file that holds compile and run-time logs from each test
-#	LOG		temporary log file that collects compile and run-time logs from all tests
-#	marks		array containing marks from all the tests
-#	comments	"Wrong Answer", "Compilation Error", "Timeout", "Accepted"
-#	comments to be added in future: "Runtime Error", "Partial Answer", "Exception", "Files Not Available",
-#					"Unsupported Language"
 #
-#	TESTDIR		directory containing all the relevant tests for each language supported for an assignment;
+# All variables that are exported/imported are in upper case convention. They are:
+#   TESTLOG : temporary test log file that holds compile and run-time logs from each test
+#   LOG : temporary log file that collects compile and run-time logs from all tests
+#   LANGUAGE : language in which the student has submitted an evaluation request
+#	  TESTDIR	: directory containing all the relevant tests for each language supported for an assignment;
 #			At the top-level of testDir, there would be language-specific folders. The contents of each folder are
-#					setup/		contains input and file copying shell script for each test
-#					tests/		contains the language-specific testing code
-#								(in the code represented by TESTSETUP variable)
-#					apart from the above, there would also be language-agnostic, IO check files put in
-#					checks/		contains files for comparison of outputs
-#	testInfo	file containing all the tests from the lab author
+#				setup/		contains input and file copying shell script for each test
+#				tests/		contains the language-specific testing code
+#							(in the code represented by TESTSETUP variable)
+#				apart from the above, there would also be language-agnostic, IO check files put in
+#				checks/		contains files for comparison of outputs
+#   TESTSETUP : name of the test setup directory
+#   TIMELIMIT : variable holding "Timeout" value from "testInfo" file
+#   TESTNAME : variable holding "Test#" string from "testInfo" file
+#   TIMEDOUT : exit code of timeout utility (124 - timeout, 0 - completed within time)
+#   TESTMARKS : marks obtained in one test case
+#   DRIVER : associative array variable that stores the name of language specific driver files
+#   COMPILATION_STATUS : compilation status of the submitted solution files for a test
+# All other variables are in lower case convention. They are:
+#	  testInfo : file containing all the tests from the lab author
 #			this file is common for all languages and is programming language agnostic
-#				file needs to be formatted as tab-separated value file with three columns
-#				Test# <Tab> Timeout
+#			file needs to be formatted as tab-separated value file with three columns
+#			Test# <Tab> Timeout
 #			Ex:	Test1		1
-#
-#	TESTNAME	variable holding "Test#" string from "testInfo" file
-#	TIMELIMIT	variable holding "Timeout" value from "testInfo" file
-#
-#	testStatus	status comment of a test; used to look up code in "testStatusEncoder" associative array
-#	TESTMARKS	marks obtained in one test case
+#	  marks	: array containing marks from all the tests
+#	  comments : "Wrong Answer", "Compilation Error", "Timeout", "Accepted"
+#	    comments to be added in future: "Runtime Error", "Partial Answer", "Exception", "Files Not Available",
+#			"Unsupported Language"
+#	  testStatus : status comment of a test; used to look up code in "testStatusEncoder" associative array
+#   logLength : stores the length of the log file specified by LOG
 ######################################################
 
 if [ "$#" -ne 1 ]
@@ -57,7 +63,6 @@ then
   echo "The language can be any of the following: java, c, python2, python3, cpp, cpp14"
   exit
 fi
-
 
 #generate a random string and store in variable suffix
 suffix=$(awk 'BEGIN{srand(); printf "%d\n",rand()*10000000000}')

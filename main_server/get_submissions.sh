@@ -1,4 +1,7 @@
 #!/bin/bash
+#The arguments obtained are stored in variables in lower case convention. They are:
+#  lab : lab number for evaluation
+#  gitlab_hostname : hostname for gitlab
 lab="$1"
 gitlab_hostname="$2"
 rm -r ./lab_backups/"$lab"

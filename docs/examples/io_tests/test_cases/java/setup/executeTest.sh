@@ -5,13 +5,19 @@
 #
 # script fragment used by ../../execute.sh to perform run-time tests. This script is not invoked directly
 #
-# variables manipulated:
-#    TESTMARKS		marks obtained in this test case
-#    TIMEDOUT		exit code of timeout utility (124 - timeout, 0 - completed within time)
-#
-# variabled used:
-#	TESTLOG		name of log file that stores results of a test
-#	LOG		log file that stores results from all tests
+# All variables that are exported/imported are in upper case convention. They are:
+#   TIMELIMIT : time limit in which the execution of this test should finish
+#   TESTLOG : name of log file that stores results of a test
+#   TIMEDOUT : exit code of timeout utility (124 - timeout, 0 - completed within time)
+#   TESTMARKS : marks obtained in this test case
+#   LOG : log file that stores results from all tests
+# The environment variables are in upper case convention. They are:
+#   PIPESTATUS : an array variable which contains the exit status of each command in piped commands
+#   JAVA_TOOL_OPTIONS : java environment variable
+#   CLASSPATH : specifies the location of user-defined classes and packages
+# All other variables are in lower case convention. They are:
+#   file : iterator variable to extract filenames in the directory with extension .java
+#   name : name of the .java file
 ###########
 
 #compilation is successful, now run the test
