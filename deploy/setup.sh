@@ -82,9 +82,6 @@ cd "$INSTALL_DIR"/deploy || exit
 bash keys.sh
 
 cat << EOF
-Done installing base packages
-
-You may now edit the configuration files in configs directory and execute
-'sudo ansible-playbook -i inventory playbook.yml -u <username> --ask-sudo-pass'
-to install AutoLabJS
+Done installing base packages.
+Follow the remaining procedure to finish installing AutolabJS. 
 EOF

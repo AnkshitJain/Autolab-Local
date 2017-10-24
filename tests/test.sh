@@ -3,7 +3,8 @@
 ############
 # Authors: Ankshit Jain, Kashyap Gajera, Prasad Talasila
 # Purpose: To run tests in travis
-# Date: 24-March-2017
+# Date: 06-Oct-2017
+# Previous Versions: 24-March-2017
 ###########
 
 set -e # Exit with nonzero exit code if anything fails

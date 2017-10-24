@@ -2,8 +2,8 @@
 ######################################################
 #
 # Author: TSRK Prasad
-# Date: 02-May-2017
-# Previous Versions: 26-April-2017, 06-Dec-2016, Sep-2016
+# Date: 28-Sep-2017
+# Previous Versions: 02-May-2017, 26-April-2017, 06-Dec-2016, Sep-2016
 #
 # Purpose: script invoked by execution nodes with one command-line arguement
 #	   this script accomplishes one evaluation
@@ -54,7 +54,7 @@
 #	    comments to be added in future: "Runtime Error", "Partial Answer", "Exception", "Files Not Available",
 #			"Unsupported Language"
 #	  testStatus : status comment of a test; used to look up code in "testStatusEncoder" associative array
-#   logLength : stores the length of the log file specified by LOG
+#   logLength : stores the number of lines of the log file specified by LOG
 ######################################################
 
 if [ "$#" -ne 1 ]
@@ -120,8 +120,6 @@ else
   touch results/comment.txt
   echo "UNSUPPORTED LANGUAGE CHOSEN" > results/log.txt
   echo "Your instructor does not wish to evaluate code submissions in $1 language" >> results/log.txt
-  cp -f results/scores.txt scores.txt
-  cp -f results/comment.txt comment.txt
   exit
 fi
 
