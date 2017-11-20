@@ -14,32 +14,42 @@ teardown() {
 #Since all the tests prior to this, run on a single node, we have to verify if one or more
 #requests have been received at a particular node.
 @test "Concurrent nodes test for 2 concurrent executions" {
-  node submit.js -i 2015A7PS006G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/java1.txt" & \
-  node submit.js -i 2015A7PS007G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/java2.txt"
+  node submit.js -i 2015A7PS101G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/concurrent1.txt" & \
+  node submit.js -i 2015A7PS102G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/concurrent2.txt"
   sleep 5
-  for ((i=1; i <= NUMBER_OF_EXECUTION_NODES; i++))
+
+  for ((n=1; n <= NUMBER_OF_EXECUTION_NODES; n++))
   do
-    nodeAccessed=$(cat /tmp/log/execute_node"$i".log | grep -o "requestRun post request recieved" | wc -l)
-    if [[ $nodeAccessed -ge 1 ]]; then
-      result=$((result+1));
-    fi
+    for ((id=1; id <= 2; id++))
+    do
+      nodeAccessed=$(bash ./helper_scripts/execution-node/concurrent_eval.sh /tmp/log/execute_node"$n".log 2015A7PS10"$id"G lab1 java)
+      if [[ $nodeAccessed -eq 1 ]]; then
+        result=$((result+1));
+      fi
+    done
   done
   [ "$result" -eq 2 ]
+
 }
 
 @test "Concurrent nodes test for 5 concurrent executions" {
-  node submit.js -i 2015A7PS001G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/java1.txt" & \
-  node submit.js -i 2015A7PS002G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/java2.txt" & \
-  node submit.js -i 2015A7PS003G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/java3.txt" & \
-  node submit.js -i 2015A7PS004G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/java4.txt" & \
-  node submit.js -i 2015A7PS005G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/java5.txt"
+  node submit.js -i 2015A7PS201G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/concurrent1.txt" & \
+  node submit.js -i 2015A7PS202G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/concurrent2.txt" & \
+  node submit.js -i 2015A7PS203G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/concurrent3.txt" & \
+  node submit.js -i 2015A7PS204G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/concurrent4.txt" & \
+  node submit.js -i 2015A7PS205G -l lab1 --lang=java --host='localhost:9000' > "$BATS_TMPDIR/execution-node-tests/concurrent5.txt"
   sleep 10
-  for ((i=1; i <= NUMBER_OF_EXECUTION_NODES; i++))
+
+  for ((n=1; n <= NUMBER_OF_EXECUTION_NODES; n++))
   do
-    nodeAccessed=$(cat /tmp/log/execute_node"$i".log | grep -o "requestRun post request recieved" | wc -l)
-    if [[ $nodeAccessed -ge 1 ]]; then
-      result=$((result+1));
-    fi
+    for ((id=1; id <= 5; id++))
+    do
+      nodeAccessed=$(bash ./helper_scripts/execution-node/concurrent_eval.sh /tmp/log/execute_node"$n".log 2015A7PS20"$id"G lab1 java)
+      if [[ $nodeAccessed -eq 1 ]]; then
+        result=$((result+1));
+      fi
+    done
   done
   [ "$result" -eq 5 ]
+
 }
