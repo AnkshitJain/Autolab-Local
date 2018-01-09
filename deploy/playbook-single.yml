@@ -47,7 +47,7 @@
     - name: Build GitLab Container
       docker_container:
         name: gitlab
-        image: "gitlab/gitlab-ce:latest"
+        image: "gitlab/gitlab-ce:10.1.4-ce.0"
         detach: yes
         hostname: gitlab.example.com
         env:
@@ -59,6 +59,7 @@
           - "443:443"
         restart_policy: always
         volumes:
+          - "/etc/localtime:/etc/localtime:ro"
           - "/opt/autolabjs/gitlab/config:/etc/gitlab"
           - "/opt/autolabjs/gitlab/logs:/var/log/gitlab"
           - "/opt/autolabjs/gitlab/data:/var/opt/gitlab"
@@ -147,9 +148,12 @@
           - "./keys/gitlab/load_balancer:/root/.ssh/"
           - "../util:/util"
           - "./configs/util:/etc/util"
+          - "../log/load_balancer:/log"
         env:
           LOGGERCONFIG: "/etc/util/logger.json"
+          LBCONFIG: "/etc/load_balancer/nodes_data_conf.json"
           GITLAB_IP: "{{ gitlab_hostname }}"
+          NODE_TLS_REJECT_UNAUTHORIZED: "{{ reject_unauthorised }}"
 
 - hosts: mainserver
   become: yes
@@ -172,8 +176,14 @@
           - "./configs/main_server:/etc/main_server"
           - "../util:/util"
           - "./configs/util:/etc/util"
+          - "../log/main_server:/log"
         env:
           LOGGERCONFIG: "/etc/util/logger.json"
+          MSCONFIG: "/etc/main_server/conf.json"
+          MSLABCONFIG: "/etc/main_server/labs.json"
+          MSCOURSECONFIG: "/etc/main_server/course.json"
+          MSAPIKEYS: "/etc/main_server/APIKeys.json"
+#          NODE_TLS_REJECT_UNAUTHORIZED: "{{ reject_unauthorised }}"
 
 - hosts: executionnode1
   become: yes
@@ -228,9 +238,13 @@
           - "./keys/gitlab/execution_nodes/execution_node_1:/root/.ssh/"
           - "../util:/util"
           - "./configs/util:/etc/util"
+          - "../log/execution_nodes/execution_node_1:/log"
         env:
           LOGGERCONFIG: "/etc/util/logger.json"
           GITLAB_IP: "{{ gitlab_hostname }}"
+          ENCONFIG: "/etc/execution_node/conf.json"
+          ENSCORES: "/etc/execution_node/scores.json"
+#          NODE_TLS_REJECT_UNAUTHORIZED: "{{ reject_unauthorised }}"
 
 - hosts: executionnode2
   become: yes
@@ -280,9 +294,13 @@
           - "./keys/gitlab/execution_nodes/execution_node_2:/root/.ssh/"
           - "../util:/util"
           - "./configs/util:/etc/util"
+          - "../log/execution_nodes/execution_node_2:/log"
         env:
           LOGGERCONFIG: "/etc/util/logger.json"
           GITLAB_IP: "{{ gitlab_hostname }}"
+          ENCONFIG: "/etc/execution_node/conf.json"
+          ENSCORES: "/etc/execution_node/scores.json"
+#          NODE_TLS_REJECT_UNAUTHORIZED: "{{ reject_unauthorised }}"
 
 - hosts: executionnode3
   become: yes
@@ -332,9 +350,13 @@
           - "./keys/gitlab/execution_nodes/execution_node_3:/root/.ssh/"
           - "../util:/util"
           - "./configs/util:/etc/util"
+          - "../log/execution_nodes/execution_node_3:/log"
         env:
           LOGGERCONFIG: "/etc/util/logger.json"
           GITLAB_IP: "{{ gitlab_hostname }}"
+          ENCONFIG: "/etc/execution_node/conf.json"
+          ENSCORES: "/etc/execution_node/scores.json"
+#          NODE_TLS_REJECT_UNAUTHORIZED: "{{ reject_unauthorised }}"
 
 - hosts: executionnode4
   become: yes
@@ -384,9 +406,13 @@
           - "./keys/gitlab/execution_nodes/execution_node_4:/root/.ssh/"
           - "../util:/util"
           - "./configs/util:/etc/util"
+          - "../log/execution_nodes/execution_node_4:/log"
         env:
           LOGGERCONFIG: "/etc/util/logger.json"
           GITLAB_IP: "{{ gitlab_hostname }}"
+          ENCONFIG: "/etc/execution_node/conf.json"
+          ENSCORES: "/etc/execution_node/scores.json"
+#          NODE_TLS_REJECT_UNAUTHORIZED: "{{ reject_unauthorised }}"
 
 - hosts: executionnode5
   become: yes
@@ -436,6 +462,10 @@
           - "./keys/gitlab/execution_nodes/execution_node_5:/root/.ssh/"
           - "../util:/util"
           - "./configs/util:/etc/util"
+          - "../log/execution_nodes/execution_node_5:/log"
         env:
           LOGGERCONFIG: "/etc/util/logger.json"
           GITLAB_IP: "{{ gitlab_hostname }}"
+          ENCONFIG: "/etc/execution_node/conf.json"
+          ENSCORES: "/etc/execution_node/scores.json"
+#          NODE_TLS_REJECT_UNAUTHORIZED: "{{ reject_unauthorised }}"
