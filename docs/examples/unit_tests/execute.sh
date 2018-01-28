@@ -242,8 +242,15 @@ then
   mv "$LOG" log.txt
 fi
 
-#copy core dump messages to log file
-cp shellOut.txt temp.txt
+#truncate if necessary and copy core dump messages to log file
+shellOutLength=$(wc -l shellOut.txt | awk '{print $1}')
+if [ "$shellOutLength" -gt 50 ]
+then
+  head -n 50 shellOut.txt >> temp.txt
+  echo -e "\n=====LOG TRUNCATED====\n" >> temp.txt
+else
+  cp shellOut.txt temp.txt
+fi
 
 # truncate a really long log to 50 lines
 logLength=$(wc -l log.txt | awk '{print $1}')
