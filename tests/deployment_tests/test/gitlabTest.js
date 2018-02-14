@@ -1,14 +1,9 @@
-/* eslint no-underscore-dangle: [2, { "allow": ["__get__"] }] */
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const rewire = require('rewire');
 const dirtyChai = require('dirty-chai');
 const { User, Project, listUsers } = require('../gitlab.js');
 const { gitlab } = require('../../../deploy/configs/gitlab/gitlab.json');
 const git = require('simple-git/promise');
-
-const getToken = rewire('../gitlab.js').__get__('getToken');
-const getId = rewire('../gitlab.js').__get__('getId');
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -19,6 +14,7 @@ const gitlabHostname = gitlab.hostname;
 const invalidUser = {
   username: 'incorrectUser',
   password: 'wrongPassword',
+  project: 'project',
 };
 const testUser = {
   username: 'user',
@@ -32,29 +28,6 @@ process.env.GITLABTEMP is the temp directory used for cloning during tests for c
 
 let user;
 let project;
-
-describe('Get private token from Gitlab', () => {
-  it('Token for correct admin credentials', async () => {
-    const token = await getToken();
-    token.should.exist();
-  });
-
-  it('Request rejected for incorrect admin credentials', async () => {
-    getToken(invalidUser.username, invalidUser.password).should.be.rejectedWith('Error in obtaining a private token');
-  });
-});
-
-describe('Get id of a user', () => {
-  it('Correct id for admin user', async () => {
-    const id = (await getId(adminUserName))[1];
-    id.should.equal(1);
-  });
-
-  it('Request rejected for incorrect admin credentials', async () => {
-    const id = (await getId(invalidUser.username))[1];
-    id.should.equal(-1);
-  });
-});
 
 /* This check tests if the listed users have the admin user listed since
 admin user is the first user on gitlab. */
@@ -117,6 +90,15 @@ describe('Create project for a user on gitlab', () => {
 
   before(async () => {
     await user.addUser();
+  });
+
+  it('A new project for a user that does not exist will be rejected', async () => {
+    const invalidProject = new Project(
+      invalidUser.username,
+      invalidUser.password,
+      invalidUser.project,
+    );
+    invalidProject.createProject().should.be.rejectedWith('Error in obtaining a private token');
   });
 
   it('A new project is created successfully', async () => {

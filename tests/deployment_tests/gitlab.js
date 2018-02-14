@@ -17,7 +17,6 @@ async function gitlabAPICaller(httpMethod, resource, requestBody) {
   return [responseBody, null];
 }
 
-
 async function getToken(user = adminUserName, pass = adminPassword) {
   const requestBody = {
     json: {
@@ -111,12 +110,12 @@ class Project {
   }
 
   async createProject() {
-    const authToken = await getToken(this.username, this.password);
     const requestBody = {
       json: {
         name: this.projectName,
       },
     };
+    const authToken = await getToken(this.username, this.password);
     const response = await gitlabAPICaller('post', `projects?private_token=${authToken}`, requestBody);
     const error = response[1];
     const responseBody = (error) ? error.error : response[0];

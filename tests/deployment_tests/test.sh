@@ -55,7 +55,7 @@ mkdir -p "$GITLABTEMP"
 cp -r ../../docs/examples/unit_tests/student_solution/java/ "$COMMITPATH"
 
 echo -e "\n Unit Tests \n"
-npm test
+npm test || :
 
 rm -rf "$TMPDIR/gitlab-tests"
 #echo -e "\n\n=========test cases===========\n"
