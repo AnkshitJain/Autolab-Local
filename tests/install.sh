@@ -12,13 +12,13 @@
 #  config : contains the path for the environment.conf file
 
 set -ex
-config=./tests/environment.conf
+config=./tests/env.conf
 if [[ -f $config ]]
 then
   # shellcheck disable=SC1090
   . "$config"
 else
-  echo "The environment variables file could not be located at ./tests/environment.conf. Exiting."
+  echo "The environment variables file could not be located at ./tests/env.conf. Exiting."
   exit 1
 fi
 
