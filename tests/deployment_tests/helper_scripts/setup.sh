@@ -13,4 +13,4 @@ sudo docker exec gitlab gitlab-ctl reconfigure
 sudo docker exec gitlab gitlab-ctl restart
 sudo apt-get install -y mysql-client
 cd ../../ # Change to the AutolabJS Home directory
-bash scripts/npm_install.sh testing $(pwd)
+bash scripts/npm_install.sh deployment $(pwd)
