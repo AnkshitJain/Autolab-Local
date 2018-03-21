@@ -12,12 +12,6 @@
 # Note: pwd is $INSTALL_DIR/tests/functional_tests/
 
 set -ex
-# install node dependencies for functional tests
-npm --quiet install 1>/dev/null 2>&1
-
-# Setup for tests in the test_modules directory
-cd ../test_modules/
-bash init.sh
 cd ../..
 
 # change the config file paths and replace gitlab dependency with a file system repository for execution nodes
