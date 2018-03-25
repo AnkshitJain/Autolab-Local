@@ -28,7 +28,7 @@ mysql -e 'USE Autolab;'
 echo -e "USE mysql;\nUPDATE user SET password=PASSWORD('root') WHERE user='root';\nFLUSH PRIVILEGES;\n" | \
     mysql -u root
 
-bash scripts/npm_install.sh travis $(pwd)
+bash scripts/npm_install.sh travis "$(pwd)"
 
 mkdir execution_nodes_data/
 cp -rf execution_nodes/. execution_nodes_data/ 2>&1
