@@ -39,7 +39,9 @@ else
   echo "The environment variables file could not be located at ./details.conf. Exiting."
   exit 1
 fi
+# shellcheck disable=2034
 BATS="node_modules/bats/libexec/bats"
+# shellcheck disable=2034
 TESTDIR=""
 set +o allexport
 # End exporting all variables.
