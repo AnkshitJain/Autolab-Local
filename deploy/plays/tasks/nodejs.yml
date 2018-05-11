@@ -1,0 +1,27 @@
+---
+- name: Getting node source setup script
+  uri:
+    url: http://deb.nodesource.com/setup_8.x
+    method: GET
+    follow_redirects: safe
+    dest: '/tmp/nodesource_setup.sh'
+    mode: 0775
+
+- name: Running node source setup script
+  shell: '/tmp/nodesource_setup.sh'
+
+- name: Install nodejs and build-essential
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    force: yes
+  with_items:
+    - nodejs
+    - build-essential
+
+- name: Deleting nodesource_setup.sh
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - '/tmp/nodesource_setup.sh'

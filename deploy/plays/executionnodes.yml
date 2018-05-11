@@ -1,9 +1,29 @@
 - hosts: executionnodes
-  become: yes
   tasks:
 
+    - name: Create the required directories for storing security keys
+      file:
+        path: "{{ install_dir }}/{{ item }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: 0755
+      with_items:
+        - "deploy/keys/execution_nodes/{{ en_dir }}"
+        - "deploy/keys/gitlab/execution_nodes/{{ en_dir }}"
+
+    - name: Generate certificate for execution node
+      include_tasks: tasks/createCert.yml domain="deploy/keys/execution_nodes/{{ en_dir }}" common_name="{{ inventory_hostname }}.{{ organization }}"
+
+    - copy:
+        src: "{{ install_dir }}/deploy/keys/execution_nodes/{{ en_dir }}/"
+        dest: "{{ install_dir }}/execution_nodes/{{ en_dir }}/ssl/"
+        mode: 0755
+
+    - name: Generate ssh login keys for Gitlab
+      include_tasks: tasks/sshKeyGen.yml path="deploy/keys/gitlab/execution_nodes/{{ en_dir }}" comment="load balancer key for {{ inventory_hostname }}@autolabjs"
+
     - name: Register public key
-      shell: "cat ../keys/gitlab/execution_nodes/{{ en_dir }}/id_rsa.pub"
+      shell: "cat {{ install_dir }}/deploy/keys/gitlab/execution_nodes/{{ en_dir }}/id_rsa.pub"
       register: ssh_key
 
     - name: Get Private Token
@@ -33,11 +53,13 @@
         return_content: yes
 
     - name: Build executionnode
+      become: yes
       docker_image:
         name: execution_node
-        path: "../../execution_nodes/{{ en_dir }}"
+        path: "{{ install_dir }}/execution_nodes/{{ en_dir }}"
 
     - name: Start execution_node container
+      become: yes
       docker_container:
         name: "execution-node-{{ ansible_host }}-{{ port }}"
         image: execution_node
@@ -45,13 +67,13 @@
         detach: yes
         restart_policy: always
         volumes:
-          - "../../execution_nodes/{{ en_dir }}:/execution_nodes"
+          - "{{ install_dir }}/execution_nodes/{{ en_dir }}:/execution_nodes"
           - "/etc/localtime:/etc/localtime:ro"
-          - "../configs/execution_nodes/{{ en_dir }}:/etc/execution_node"
-          - "../keys/gitlab/execution_nodes/{{ en_dir }}:/root/.ssh/"
-          - "../../util:/util"
-          - "../configs/util:/etc/util"
-          - "../../log/execution_nodes/{{ en_dir }}:/log"
+          - "{{ install_dir }}/deploy/configs/execution_nodes/{{ en_dir }}:/etc/execution_node"
+          - "{{ install_dir }}/deploy/keys/gitlab/execution_nodes/{{ en_dir }}:/root/.ssh/"
+          - "{{ install_dir }}/util:/util"
+          - "{{ install_dir }}/deploy/configs/util:/etc/util"
+          - "{{ install_dir }}/log/execution_nodes/{{ en_dir }}:/log"
         env:
           LOGGERCONFIG: "/etc/util/logger.json"
           GITLAB_IP: "{{ gitlab_hostname }}"
